@@ -1,17 +1,35 @@
 import { useState } from 'react';
 const initialItems = [
-  { id: 1, description: 'Passports', quantity: 2, packed: false },
-  { id: 2, description: 'Socks', quantity: 12, packed: true },
+  { id: 1, description: 'Kem đánh răng', quantity: 2, packed: false },
+  { id: 2, description: 'Bàn chải đánh răng', quantity: 12, packed: false },
   { id: 3, description: 'Quần chip', quantity: 2, packed: false },
+  { id: 4, description: 'Dầu gội đầu', quantity: 2, packed: false },
 ];
 function App() {
   const [listItem, setListItem] = useState(initialItems);
+  const numberOfItems = listItem.length;
+  const percentOfItemsFinished = (
+    (listItem.reduce((coun, item) => (item.packed ? coun + 1 : coun), 0) /
+      numberOfItems) *
+    100
+  ).toFixed(2);
+  function handlerDelete(id) {
+    setListItem(s => s.filter(item => item.id !== id));
+  }
+  function handlePacked(id) {
+    // udpate list item
+    setListItem(
+      listItem.map(item =>
+        item.id === id ? { ...item, packed: !item.packed } : item
+      )
+    );
+  }
   return (
     <div className="app">
       <Logo />
       <Form {...{ setListItem, listItem }} />
-      <PackingList {...{ listItem }} />
-      <Stats />
+      <PackingList {...{ listItem, handlerDelete, handlePacked }} />
+      <Stats {...[numberOfItems, percentOfItemsFinished]} />
     </div>
   );
 }
@@ -64,28 +82,45 @@ function PackingList(props) {
     <div className="list">
       <ul>
         {props.listItem.map(item => (
-          <Item {...item} key={item.id} />
+          <Item
+            item={item}
+            onDelete={props.handlerDelete}
+            key={item.id}
+            handlePacked={props.handlePacked}
+          />
         ))}
       </ul>
+      <div className="ac"></div>
     </div>
   );
 }
-function Stats() {
+function Stats(props) {
+  console.log(props);
   return (
     <footer className="stats">
-      <em>You hae X iem in your list</em>
+      <strong>You have {props[0]} item in your list</strong>
+      <br />
+      <em>You have finished {props[1]}%</em>
+      <br />
+      <input type="range" min={0} max={props[0]} value={props[1]} />
     </footer>
   );
 }
 function Item(props) {
-  const [packed, setPacked] = useState(props.packages);
   return (
-    <li onClick={() => setPacked(!packed)}>
+    <li>
       <span>
-        {props.quantity} &nbsp;
-        {props.description}
+        <input
+          type="checkbox"
+          onClick={() => props.handlePacked(props.item.id)}
+        ></input>
+        &nbsp;
+        {props.item.quantity} &nbsp;
+        {props.item.description}
       </span>
-      <button onClick={() => setPacked(!packed)}>{packed ? '✅' : '❌'}</button>
+      <button onClick={() => props.onDelete(props.item.id)}>
+        {props.item.packed ? '✅' : '❌'}
+      </button>
     </li>
   );
 }
